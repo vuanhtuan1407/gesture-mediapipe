@@ -113,20 +113,24 @@ if __name__ == "__main__":
     GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
     VisionRunningMode = mp.tasks.vision.RunningMode
 
-    path = './data/photo_2024-03-05_09-28-23.jpg'
-    img = cv2.imread(path)
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
+    path = './data/photo_3_2024-03-05_09-00-20.jpg'
+    # img = cv2.imread(path)
+    mp_image = mp.Image.create_from_file(path)
+
+    images = []
+    results = []
 
     # Create a gesture recognizer instance with the image mode:
     options = GestureRecognizerOptions(
-        base_options=BaseOptions(model_asset_path='/gesture_recognizer.task'),
+        base_options=BaseOptions(model_asset_path='gesture_recognizer.task'),
         running_mode=VisionRunningMode.IMAGE)
     with GestureRecognizer.create_from_options(options) as recognizer:
         recognition_result = recognizer.recognize(mp_image)
 
         # STEP 5: Process the result. In this case, visualize it.
-        # images.append(image)
+        images.append(mp_image)
         top_gesture = recognition_result.gestures[0][0]
         hand_landmarks = recognition_result.hand_landmarks
+        results.append((top_gesture, hand_landmarks))
 
-        display_batch_of_images_with_gestures_and_hand_landmarks(img, (top_gesture, hand_landmarks))
+    display_batch_of_images_with_gestures_and_hand_landmarks(images, results)
