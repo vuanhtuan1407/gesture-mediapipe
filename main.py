@@ -113,8 +113,10 @@ if __name__ == "__main__":
     GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
     VisionRunningMode = mp.tasks.vision.RunningMode
 
-    path = './data/photo_3_2024-03-05_09-00-20.jpg'
+    # Import related path of image that you want to predict
+    # path = './data/new/Cam Bien So_Camera 01_20340103165202_756412.jpg'
     # img = cv2.imread(path)
+    path = './data/photo_6293834231222221931_y.jpg'
     mp_image = mp.Image.create_from_file(path)
 
     images = []
@@ -126,6 +128,9 @@ if __name__ == "__main__":
         running_mode=VisionRunningMode.IMAGE)
     with GestureRecognizer.create_from_options(options) as recognizer:
         recognition_result = recognizer.recognize(mp_image)
+
+        if len(recognition_result.gestures) == 0:
+            print("undetected image")
 
         # STEP 5: Process the result. In this case, visualize it.
         images.append(mp_image)
