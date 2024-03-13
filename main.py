@@ -58,12 +58,12 @@ def display_image_with_gesture_and_label(mp_image, result):
     plt.show()
 
 
-def gesture_predict(image, model_type: str = "mediapipe"):
+def gesture_predict(cv2_image, model_type: str = "mediapipe"):
     # Build Model
     model = build_model(model_type=model_type)
 
     # Load image (transfer from cv2 Image to mp Image)
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2_image)
 
     # Predict
     result = model.recognize(image=mp_image)
