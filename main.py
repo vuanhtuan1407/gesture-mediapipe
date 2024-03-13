@@ -34,28 +34,32 @@ def build_model(model_type: str = "mediapipe"):
 
 def display_image_with_gesture_and_label(mp_image, result):
     image = mp_image.numpy_view()
-    if len(result.gestures) == 0:
-        print("Undetected gesture")
-    top_gesture = result.gestures[0][0]
-    hand_landmarks = result.hand_landmarks
-
     annotated_image = image.copy()
 
-    hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
-    hand_landmarks_proto.landmark.extend([
-        landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in hand_landmarks
-    ])
+    if len(result.gestures) == 0:
+        print("Undetected gesture")
+        plt.title('Undetected gesture')
+        plt.imshow(annotated_image)
+        plt.show()
+    else:
+        top_gesture = result.gestures[0][0]
+        hand_landmarks = result.hand_landmarks
 
-    mp_drawing.draw_landmarks(
-        annotated_image,
-        hand_landmarks_proto,
-        mp_hands.HAND_CONNECTIONS,
-        mp_drawing_styles.get_default_hand_landmarks_style(),
-        mp_drawing_styles.get_default_hand_connections_style())
+        hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
+        hand_landmarks_proto.landmark.extend([
+            landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in hand_landmarks
+        ])
 
-    plt.title(f'{top_gesture.category_name}({top_gesture.score * 100}%)')
-    plt.imshow(annotated_image)
-    plt.show()
+        mp_drawing.draw_landmarks(
+            annotated_image,
+            hand_landmarks_proto,
+            mp_hands.HAND_CONNECTIONS,
+            mp_drawing_styles.get_default_hand_landmarks_style(),
+            mp_drawing_styles.get_default_hand_connections_style())
+
+        plt.title(f'{top_gesture.category_name}({top_gesture.score * 100}%)')
+        plt.imshow(annotated_image)
+        plt.show()
 
 
 def gesture_predict(cv2_image, model_type: str = "mediapipe"):
@@ -72,7 +76,7 @@ def gesture_predict(cv2_image, model_type: str = "mediapipe"):
     display_image_with_gesture_and_label(mp_image=mp_image, result=result)
 
 
-if __name__ == "__main__":
-    image_path = './data/photo_6293834231222221931_y.jpg'
+if __name__ == '__main__':
+    image_path = './data/new/5/Cam Bien So_Camera 01_20340103165214_768921.jpg'
     image = cv2.imread(image_path)
     gesture_predict(image)
