@@ -121,7 +121,8 @@ def gesture_predict(frame, task: str = 'image', fps: float = 0):
 
 
 if __name__ == '__main__':
-    video = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    video = cv2.VideoCapture()
+    video.open("rtsp://admin:abcd1234@192.168.1.12:554/cam/realmonitor?channel=1&subtype=1")
     if not video.isOpened():
         raise IOError("Cannot open webcam")
 
