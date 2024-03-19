@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import mediapipe as mp
 from matplotlib import pyplot as plt
@@ -30,40 +32,18 @@ def print_result(result: GestureRecognizerResult, output_image: mp.Image, timest
     print('gesture recognition result: {}'.format(result))
 
 
-def build_model(task: str = 'image'):
-    if task == 'image':
-        base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
-        options = vision.GestureRecognizerOptions(
-            base_options=base_options,
-            num_hands=1,
-            running_mode=mp.tasks.vision.RunningMode.IMAGE
-        )
-        recognizer = vision.GestureRecognizer.create_from_options(options)
-        return recognizer
-
-    elif task == 'video':
-        base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
-        options = vision.GestureRecognizerOptions(
-            base_options=base_options,
-            num_hands=1,
-            running_mode=mp.tasks.vision.RunningMode.VIDEO
-        )
-        recognizer = vision.GestureRecognizer.create_from_options(options)
-        return recognizer
-
-    elif task == 'live_stream':
-        base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
-        options = vision.GestureRecognizerOptions(
-            base_options=base_options,
-            num_hands=1,
-            running_mode=mp.tasks.vision.RunningMode.LIVE_STREAM,
-            result_callback=print_result
-        )
-        recognizer = vision.GestureRecognizer.create_from_options(options)
-        return recognizer
+def __build_model():
+    base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
+    options = vision.GestureRecognizerOptions(
+        base_options=base_options,
+        num_hands=1,
+        running_mode=mp.tasks.vision.RunningMode.IMAGE
+    )
+    recognizer = vision.GestureRecognizer.create_from_options(options)
+    return recognizer
 
 
-def display_image_with_gesture_and_label(mp_image, result):
+def __display_image_with_gesture_and_label(mp_image, result):
     image = mp_image.numpy_view()
     annotated_image = cv2.cvtColor(image.copy(), cv2.COLOR_RGB2BGR)
     label = "Undetected"
@@ -103,12 +83,12 @@ def display_image_with_gesture_and_label(mp_image, result):
     cv2.waitKey(1)
 
 
-def gesture_predict(frame, task: str = 'image', fps: float = 0):
+def gesture_predict(frame):
     # Convert frame into right colors
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     # Build Model
-    model = build_model(task=task)
+    model = __build_model()
 
     # Load image (transfer from cv2 Image to mp Image)
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
@@ -117,12 +97,15 @@ def gesture_predict(frame, task: str = 'image', fps: float = 0):
     result = model.recognize(image=mp_image)
 
     # Display image with prediction gesture and label
-    display_image_with_gesture_and_label(mp_image=mp_image, result=result)
+    __display_image_with_gesture_and_label(mp_image=mp_image, result=result)
 
 
 if __name__ == '__main__':
     video = cv2.VideoCapture()
-    video.open("rtsp://admin:abcd1234@192.168.1.12:554/cam/realmonitor?channel=1&subtype=1")
+    # video.open("http://admin:Facenet2022@192.168.1.2:8001")
+    # video.open(0)
+    video.open('./data/video/video_2024-03-13_16-27-50.mp4')
+    # time.sleep(2)
     if not video.isOpened():
         raise IOError("Cannot open webcam")
 
@@ -133,11 +116,21 @@ if __name__ == '__main__':
     seconds = 28
     frame_id = int(fps * (minutes * 60 + seconds))
     print('frame id =', frame_id)
+    t0 = time.time()
 
     while True:
+        t1 = time.time()
+        # print(t1-t0)
         ret, frame = video.read()
+        # res, encoded = cv2.imencode('.jpg', frame)
+        # frame_mjpeg = encoded.tobytes()
         if ret:
-            gesture_predict(frame, task='image')
+            t1 = time.time()
+            gesture_predict(frame)
+            t2 = time.time()
+            print('frame time =', t2 - t1)
+        # elif ret and int((t1-t0)) % 3 != 0:
+        #     continue
         else:
             break
 
