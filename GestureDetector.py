@@ -1,3 +1,4 @@
+import json
 import time
 
 import cv2
@@ -22,7 +23,10 @@ class GestureDetector(object):
         options = vision.GestureRecognizerOptions(
             base_options=base_options,
             num_hands=1,
-            running_mode=mp.tasks.vision.RunningMode.IMAGE
+            running_mode=mp.tasks.vision.RunningMode.IMAGE,
+            min_hand_presence_confidence=0.5,
+            min_tracking_confidence=0.5,
+            min_hand_detection_confidence=0.6
         )
         recognizer = vision.GestureRecognizer.create_from_options(options)
         return recognizer
@@ -30,6 +34,7 @@ class GestureDetector(object):
     def __detect(self, bgr):
         # Image must convert from RGB to BGR
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=bgr)
+        # self.model.recognize_async(mp_image, timestamp)
         result = self.model.recognize(mp_image)
         return mp_image, result
 
@@ -38,7 +43,7 @@ class GestureDetector(object):
     #         return self.__draw_gesture(mp_image, result)
 
     @staticmethod
-    def __draw_gesture(mp_image, result):
+    def __draw_gesture(result, mp_image):
         image = mp_image.numpy_view()
         annotated_image = cv2.cvtColor(image.copy(), cv2.COLOR_RGB2BGR)
         label = "Undetected"
@@ -71,13 +76,20 @@ class GestureDetector(object):
             thickness=2
         )
 
+        response = {
+            "status": False if label == 'Undetected' else True,
+            "gestures": 'Undetected' if label == 'Undetected' else result.gestures[0][0].category_name,
+            "prob": 0.0 if label == 'Undetected' else result.gestures[0][0].score
+        }
+        json_response = json.dumps(response)
+
         annotated_image = cv2.resize(annotated_image, (720, 450), interpolation=cv2.INTER_LINEAR)
 
-        return annotated_image
+        return annotated_image, json_response
 
     def get_gesture(self, bgr):
         mp_image, result = self.__detect(bgr)
-        return self.__draw_gesture(mp_image, result)
+        return self.__draw_gesture(mp_image=mp_image, result=result)
 
 
 if __name__ == '__main__':
@@ -102,18 +114,24 @@ if __name__ == '__main__':
 
     model = GestureDetector()
 
+    print("Start detecting")
+
     while True:
-        t0 = time.time()
+        # t0 = time.time()
         ret, frame = video.read()
         # res, encoded = cv2.imencode('.jpg', frame)
         # frame_mjpeg = encoded.tobytes()
         if ret:
-            t1 = time.time()
+            # t1 = time.time()
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-            annotated_image = model.get_gesture(frame)
-            t2 = time.time()
-            print(f'Time to process frame: {(t2 - t1):.2f} seconds')
+            annotated_image, json_res = model.get_gesture(frame)
+            # t2 = time.time()
+            # print(f'Time to process frame: {(t2 - t1):.2f} seconds')
             cv2.imshow('out', annotated_image)
-            cv2.waitKey(1)
+
+            if cv2.waitKey(1) & 0xFF == 27:
+                print("Exit")
+                break
         else:
+            print("Fail to detect frame")
             break
